@@ -1,4 +1,6 @@
 //uc1 : contact.ts
+import readline from "readline";
+
 class Contact{
     public firstName: string;
     public lastName: string;
@@ -35,47 +37,45 @@ class Contact{
 
 //uc2 : AddressBook class to manage contact list
 
-class AddressBook{
-    private contacts: Contact[] =[];
+class AddressBook {
 
-    addContact(contact : Contact):void{
+    private contacts: Contact[] = [];
+
+    addContact(contact: Contact){
         this.contacts.push(contact);
-        console.log("Contact added successfully! \n");
+        console.log('the Constact added Successfuly \n');
     }
-    displayAllConstants():void {
-        console.log(`---- All Contacts -----\n`);
-        this.contacts.forEach((contact:Contact , index :number)=> {
-            console.log(` contact ${index + 1}`);
+
+    displayAllContact(){
+        console.log('-----  All Contact  -----');
+        this.contacts.forEach((contact , index) => {
+            console.log(` Contact ${index + 1}`);
             contact.displayContact();
-        });
+        })
     }
 }
 
-// uc2b - Addressbookmain class (to enter contact using console)
-
-import * as readline from 'readline';
-
 class AddressBookMain{
-    private addressBook: AddressBook = new AddressBook();
-    private r1 = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
+    private addressBook : AddressBook = new AddressBook();
+    private r1 = readline .createInterface({
+        input : process.stdin,
+        output : process.stdout
     });
 
+    private addContactFlow():void{
+        const contactData:any ={};
 
-    private addContactFlow(): void {
-        const contactData: any = {};
-        this.r1.question("First Name: ", (firstName) => {
+        this.r1.question("First name: ", (firstName)=>{
             contactData.firstName = firstName;
 
-            this.r1.question("Last Name: ", (lastName) => {
+            this.r1.question("Last name: ", (lastName) =>{
                 contactData.lastName = lastName;
 
-                this.r1.question("Address: ", (address) => {
+                this.r1.question("Address: ", (address)=> {
                     contactData.address = address;
 
-                    this.r1.question("City: ", (city) => {
-                        contactData.city = city;
+                    this.r1.question("City: ", (city)=>{
+                        contactData.city =city;
 
                         this.r1.question("State: ", (state) => {
                             contactData.state = state;
@@ -89,7 +89,7 @@ class AddressBookMain{
                                     this.r1.question("Email: ", (email) => {
                                         contactData.email = email;
 
-                                        // Create contact object and add to address book
+
                                         const newContact = new Contact(
                                             contactData.firstName,
                                             contactData.lastName,
@@ -102,9 +102,9 @@ class AddressBookMain{
                                         );
 
                                         this.addressBook.addContact(newContact);
-                                        this.addressBook.displayAllConstants();
+                                        this.addressBook.displayAllContact();
 
-                                        this.r1.close(); // close after adding 1 contact for UC2
+                                        this.r1.close();
                                     });
                                 });
                             });
@@ -114,20 +114,22 @@ class AddressBookMain{
             });
         });
     }
-    start():void{
-        console.log("Welcome to Address Book!");
 
-        this.r1.question("Do you want to add a contact? (yes/no): ", (answer) => {
-            if (answer.toLowerCase() === "yes") {
+    start() : void{
+        console.log("Welcome To Address Book!");
+        this.r1.question("Do u want to add an new contact? (y/n) : " ,(answer) =>{
+            if ( answer.toLowerCase() === "yes"|| "y"){
                 this.addContactFlow();
             } else {
-                console.log("Exiting Address Book.");
+                console.log("exiting Address book");
                 this.r1.close();
             }
+
         });
+
 
     }
 }
 
-const addressBookApp = new AddressBookMain();
-addressBookApp.start();
+const addressBook1 = new AddressBookMain();
+addressBook1.start();
