@@ -63,7 +63,7 @@ class AddressBookMain{
     });
 
     private addContactFlow():void{
-        const contactData:any ={};
+        const contactData :any = {};
 
         this.r1.question("First name: ", (firstName)=>{
             contactData.firstName = firstName;
