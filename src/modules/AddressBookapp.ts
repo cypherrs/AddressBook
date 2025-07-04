@@ -1,4 +1,4 @@
-// UC1: Creating Contact class
+// UC1: Creating Contact class to hold all contact details
 class Contact {
     public firstName: string;
     public lastName: string;
@@ -20,10 +20,11 @@ class Contact {
         this.email = email;
     }
 
+    // printing all contact details
     displayContact(): void {
         console.log("-----  Contact Details  -----");
         console.log(`Name         : ${this.firstName} ${this.lastName}`);
-        console.log(`Address      : ${this.address}, ${this.city}, ${this.state} - ${this.zip}`); // zip added to display
+        console.log(`Address      : ${this.address}, ${this.city}, ${this.state} - ${this.zip}`);
         console.log(`Phone Number : ${this.phoneNumber}`);
         console.log(`Email        : ${this.email}`);
     }
@@ -31,43 +32,55 @@ class Contact {
 
 import * as readline from 'readline';
 
-// UC2: Creating AddressBook class
+// UC2: Creating AddressBook class with ability to add and view contacts
 class AddressBook {
 
     private contacts: Contact[] = [];
 
+    // UC2: adding new contact to list
     addContact(contact: Contact) {
         this.contacts.push(contact);
-        console.log('the Contact added Successfully \n'); // fixed spelling: Constact → Contact
+        console.log('The contact added successfully.\n');
     }
 
+    // displaying all saved contacts
     displayAllContact() {
-        console.log('-----  All Contact  -----');
+        console.log('-----  All Contacts  -----');
         this.contacts.forEach((contact, index) => {
             console.log(` Contact ${index + 1}`);
             contact.displayContact();
         });
     }
 
-    // UC3: finding the contact to edit using first name and updating field
+    // UC3: finding the contact to edit using first name and updating the specific field
     editContact(firstName: string, updateField: string, newValue: string): boolean {
         const contact = this.contacts.find(c => c.firstName.toLowerCase() === firstName.toLowerCase());
         if (contact) {
             if (updateField in contact) {
-                (contact as any)[updateField] = newValue; // dynamic update of property
+                (contact as any)[updateField] = newValue; // dynamic field update
                 return true;
             }
         }
         return false;
     }
 
-    // UC3: Getter to safely access contacts from AddressBookMain
+    // UC4: finding the contact to delete and removing it from the list
+    deleteContact(firstName: string): boolean {
+        const index = this.contacts.findIndex(c => c.firstName.toLowerCase() === firstName.toLowerCase());
+        if (index !== -1) {
+            this.contacts.splice(index, 1); // delete 1 item at index
+            return true;
+        }
+        return false;
+    }
+
+    // UC3 & UC4: getter to allow safe contact access from AddressBookMain
     getContacts(): Contact[] {
         return this.contacts;
     }
 }
 
-// UC2: Using Console to add person details from AddressBookMain class
+// UC2: Using Console to manage AddressBook from main class
 class AddressBookMain {
     private addressBook: AddressBook = new AddressBook();
     private r1 = readline.createInterface({
@@ -75,6 +88,7 @@ class AddressBookMain {
         output: process.stdout
     });
 
+    // UC2: flow to collect contact details from console
     private addContactFlow(): void {
         const contactData: any = {};
 
@@ -115,7 +129,6 @@ class AddressBookMain {
 
                                         this.addressBook.addContact(newContact);
                                         this.addressBook.displayAllContact();
-
                                         this.r1.close();
                                     });
                                 });
@@ -127,10 +140,10 @@ class AddressBookMain {
         });
     }
 
-    // UC3: Updating the edit control flow using Console
+    // UC3: editing the contact by first name using console
     private editContactFlow(): void {
         this.r1.question("Enter the first name of the contact to edit: ", (firstName) => {
-            const contact = this.addressBook.getContacts().find(c => c.firstName.toLowerCase() === firstName.toLowerCase()); // using getter
+            const contact = this.addressBook.getContacts().find(c => c.firstName.toLowerCase() === firstName.toLowerCase());
 
             if (!contact) {
                 console.log("Contact not found.");
@@ -159,14 +172,33 @@ class AddressBookMain {
         });
     }
 
-    // UC2 & UC3: Updating start() to choose between add or edit
+    // UC4: deleting the contact by first name using console
+    private deleteContactFlow(): void {
+        this.r1.question("Enter the first name of the contact to delete: ", (firstName) => {
+            const success = this.addressBook.deleteContact(firstName);
+            if (success) {
+                console.log("Contact deleted successfully.");
+                this.addressBook.displayAllContact();
+            } else {
+                console.log("Contact not found.");
+            }
+            this.r1.close(); // close readline after operation
+        });
+    }
+
+    // UC2, UC3, UC4: Updated start() to support add, edit, display, delete contact
     start(): void {
         console.log("Welcome To Address Book!");
-        this.r1.question("Choose an option: \n1. Add new contact\n2. Edit contact\nEnter 1 or 2: ", (option) => {
+        this.r1.question("Choose an option: \n1. Add new contact\n2. Edit contact\n3. Display all contacts\n4. Delete contact\nEnter 1, 2, 3 or 4: ", (option) => {
             if (option === "1") {
                 this.addContactFlow();
             } else if (option === "2") {
                 this.editContactFlow();
+            } else if (option === "3") {
+                this.addressBook.displayAllContact();
+                this.r1.close();
+            } else if (option === "4") {
+                this.deleteContactFlow();
             } else {
                 console.log("Invalid choice. Exiting...");
                 this.r1.close();
@@ -175,6 +207,6 @@ class AddressBookMain {
     }
 }
 
-// UC2: Running the main class
+// UC2: Starting the app
 const addressBook1 = new AddressBookMain();
 addressBook1.start();
