@@ -34,7 +34,6 @@ import * as readline from 'readline';
 
 // UC2: Creating AddressBook class with ability to add and view contacts
 class AddressBook {
-
     private contacts: Contact[] = [];
 
     // UC2: adding new contact to list
@@ -46,6 +45,9 @@ class AddressBook {
     // displaying all saved contacts
     displayAllContact() {
         console.log('-----  All Contacts  -----');
+        if (this.contacts.length === 0) {
+            console.log("No contacts found.");
+        }
         this.contacts.forEach((contact, index) => {
             console.log(` Contact ${index + 1}`);
             contact.displayContact();
@@ -55,11 +57,9 @@ class AddressBook {
     // UC3: finding the contact to edit using first name and updating the specific field
     editContact(firstName: string, updateField: string, newValue: string): boolean {
         const contact = this.contacts.find(c => c.firstName.toLowerCase() === firstName.toLowerCase());
-        if (contact) {
-            if (updateField in contact) {
-                (contact as any)[updateField] = newValue; // dynamic field update
-                return true;
-            }
+        if (contact && updateField in contact) {
+            (contact as any)[updateField] = newValue;
+            return true;
         }
         return false;
     }
@@ -68,25 +68,40 @@ class AddressBook {
     deleteContact(firstName: string): boolean {
         const index = this.contacts.findIndex(c => c.firstName.toLowerCase() === firstName.toLowerCase());
         if (index !== -1) {
-            this.contacts.splice(index, 1); // delete 1 item at index
+            this.contacts.splice(index, 1);
             return true;
         }
         return false;
     }
 
-    // UC3 & UC4: getter to allow safe contact access from AddressBookMain
+
     getContacts(): Contact[] {
         return this.contacts;
     }
 }
 
-// UC2: Using Console to manage AddressBook from main class
+// UC6: Managing multiple AddressBooks by name using a Map
 class AddressBookMain {
-    private addressBook: AddressBook = new AddressBook();
+    private addressBooks: Map<string, AddressBook> = new Map(); // UC6 dictionary of books
+    private currentBook: AddressBook | null = null;              // to selected AddressBook
     private r1 = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
+
+    // UC6: Asking user to create or select an AddressBook by name
+    private selectAddressBook(callback: () => void): void {
+        this.r1.question("Enter Address Book name: ", (bookName) => {
+            if (!this.addressBooks.has(bookName)) {
+                console.log(`Creating new Address Book: '${bookName}'`);
+                this.addressBooks.set(bookName, new AddressBook());
+            } else {
+                console.log(`Switching to existing Address Book: '${bookName}'`);
+            }
+            this.currentBook = this.addressBooks.get(bookName)!; // assign selected book
+            callback(); // continue to menu after selection
+        });
+    }
 
     // UC5: allowing user to add multiple contacts one by one using console
     private addContactFlow(): void {
@@ -128,7 +143,7 @@ class AddressBookMain {
                                                 contactData.email
                                             );
 
-                                            this.addressBook.addContact(newContact);
+                                            this.currentBook!.addContact(newContact); // UC6: Using selected book
 
                                             // UC5: asking if user wants to add another contact
                                             this.r1.question("Do you want to add another contact? (y/n): ", (answer) => {
@@ -136,7 +151,7 @@ class AddressBookMain {
                                                     askDetails(); // repeat
                                                 } else {
                                                     console.log("Final contact list:");
-                                                    this.addressBook.displayAllContact();
+                                                    this.currentBook!.displayAllContact();
                                                     this.r1.close(); // finish adding
                                                 }
                                             });
@@ -150,14 +165,13 @@ class AddressBookMain {
             });
         };
 
-        // UC5: calling the inner function to begin adding contacts
         askDetails();
     }
 
     // UC3: editing the contact by first name using console
     private editContactFlow(): void {
         this.r1.question("Enter the first name of the contact to edit: ", (firstName) => {
-            const contact = this.addressBook.getContacts().find(c => c.firstName.toLowerCase() === firstName.toLowerCase());
+            const contact = this.currentBook!.getContacts().find(c => c.firstName.toLowerCase() === firstName.toLowerCase());
 
             if (!contact) {
                 console.log("Contact not found.");
@@ -173,10 +187,10 @@ class AddressBookMain {
                 }
 
                 this.r1.question(`Enter new value for ${field}: `, (newValue) => {
-                    const success = this.addressBook.editContact(firstName, field, newValue);
+                    const success = this.currentBook!.editContact(firstName, field, newValue);
                     if (success) {
                         console.log("Contact updated successfully.");
-                        this.addressBook.displayAllContact();
+                        this.currentBook!.displayAllContact();
                     } else {
                         console.log("Update failed.");
                     }
@@ -189,38 +203,44 @@ class AddressBookMain {
     // UC4: deleting the contact by first name using console
     private deleteContactFlow(): void {
         this.r1.question("Enter the first name of the contact to delete: ", (firstName) => {
-            const success = this.addressBook.deleteContact(firstName);
+            const success = this.currentBook!.deleteContact(firstName);
             if (success) {
                 console.log("Contact deleted successfully.");
-                this.addressBook.displayAllContact();
+                this.currentBook!.displayAllContact();
             } else {
                 console.log("Contact not found.");
             }
-            this.r1.close(); // close readline after operation
+            this.r1.close();
         });
     }
 
-    // UC2, UC3, UC4, UC5: Updated start() to support add, edit, display, delete contacts
+    // UC6: start by choosing or creating Address Book, then present options
     start(): void {
-        console.log("Welcome To Address Book!");
-        this.r1.question("Choose an option: \n1. Add new contact\n2. Edit contact\n3. Display all contacts\n4. Delete contact\nEnter 1, 2, 3 or 4: ", (option) => {
-            if (option === "1") {
-                this.addContactFlow();
-            } else if (option === "2") {
-                this.editContactFlow();
-            } else if (option === "3") {
-                this.addressBook.displayAllContact();
-                this.r1.close();
-            } else if (option === "4") {
-                this.deleteContactFlow();
-            } else {
-                console.log("Invalid choice. Exiting...");
-                this.r1.close();
-            }
+        console.log("Welcome To Address Book System!");
+        this.selectAddressBook(() => {
+            this.r1.question(
+                "Choose an option: \n1. Add new contact\n2. Edit contact\n3. Display all contacts\n4. Delete contact\nEnter 1, 2, 3 or 4: ",
+                (option) => {
+                    if (option === "1") {
+                        this.addContactFlow();
+                    } else if (option === "2") {
+                        this.editContactFlow();
+                    } else if (option === "3") {
+                        this.currentBook!.displayAllContact();
+                        this.r1.close();
+                    } else if (option === "4") {
+                        this.deleteContactFlow();
+                    } else {
+                        console.log("Invalid choice. Exiting...");
+                        this.r1.close();
+                    }
+                }
+            );
         });
     }
 }
 
-// UC2: Starting the app
+// UC6: Launching the app with ability to handle multiple address books
 const addressBook1 = new AddressBookMain();
 addressBook1.start();
+Multi
