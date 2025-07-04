@@ -88,48 +88,59 @@ class AddressBookMain {
         output: process.stdout
     });
 
-    // UC2: flow to collect contact details from console
+    // UC5: allowing user to add multiple contacts one by one using console
     private addContactFlow(): void {
-        const contactData: any = {};
+        const askDetails = () => {
+            const contactData: any = {};
 
-        this.r1.question("First name: ", (firstName) => {
-            contactData.firstName = firstName;
+            this.r1.question("First name: ", (firstName) => {
+                contactData.firstName = firstName;
 
-            this.r1.question("Last name: ", (lastName) => {
-                contactData.lastName = lastName;
+                this.r1.question("Last name: ", (lastName) => {
+                    contactData.lastName = lastName;
 
-                this.r1.question("Address: ", (address) => {
-                    contactData.address = address;
+                    this.r1.question("Address: ", (address) => {
+                        contactData.address = address;
 
-                    this.r1.question("City: ", (city) => {
-                        contactData.city = city;
+                        this.r1.question("City: ", (city) => {
+                            contactData.city = city;
 
-                        this.r1.question("State: ", (state) => {
-                            contactData.state = state;
+                            this.r1.question("State: ", (state) => {
+                                contactData.state = state;
 
-                            this.r1.question("ZIP: ", (zip) => {
-                                contactData.zip = zip;
+                                this.r1.question("ZIP: ", (zip) => {
+                                    contactData.zip = zip;
 
-                                this.r1.question("Phone Number: ", (phoneNumber) => {
-                                    contactData.phoneNumber = phoneNumber;
+                                    this.r1.question("Phone Number: ", (phoneNumber) => {
+                                        contactData.phoneNumber = phoneNumber;
 
-                                    this.r1.question("Email: ", (email) => {
-                                        contactData.email = email;
+                                        this.r1.question("Email: ", (email) => {
+                                            contactData.email = email;
 
-                                        const newContact = new Contact(
-                                            contactData.firstName,
-                                            contactData.lastName,
-                                            contactData.address,
-                                            contactData.city,
-                                            contactData.state,
-                                            contactData.zip,
-                                            contactData.phoneNumber,
-                                            contactData.email
-                                        );
+                                            const newContact = new Contact(
+                                                contactData.firstName,
+                                                contactData.lastName,
+                                                contactData.address,
+                                                contactData.city,
+                                                contactData.state,
+                                                contactData.zip,
+                                                contactData.phoneNumber,
+                                                contactData.email
+                                            );
 
-                                        this.addressBook.addContact(newContact);
-                                        this.addressBook.displayAllContact();
-                                        this.r1.close();
+                                            this.addressBook.addContact(newContact);
+
+                                            // UC5: asking if user wants to add another contact
+                                            this.r1.question("Do you want to add another contact? (y/n): ", (answer) => {
+                                                if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
+                                                    askDetails(); // repeat
+                                                } else {
+                                                    console.log("Final contact list:");
+                                                    this.addressBook.displayAllContact();
+                                                    this.r1.close(); // finish adding
+                                                }
+                                            });
+                                        });
                                     });
                                 });
                             });
@@ -137,7 +148,10 @@ class AddressBookMain {
                     });
                 });
             });
-        });
+        };
+
+        // UC5: calling the inner function to begin adding contacts
+        askDetails();
     }
 
     // UC3: editing the contact by first name using console
@@ -186,7 +200,7 @@ class AddressBookMain {
         });
     }
 
-    // UC2, UC3, UC4: Updated start() to support add, edit, display, delete contact
+    // UC2, UC3, UC4, UC5: Updated start() to support add, edit, display, delete contacts
     start(): void {
         console.log("Welcome To Address Book!");
         this.r1.question("Choose an option: \n1. Add new contact\n2. Edit contact\n3. Display all contacts\n4. Delete contact\nEnter 1, 2, 3 or 4: ", (option) => {
