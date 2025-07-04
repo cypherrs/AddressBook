@@ -214,7 +214,7 @@ class AddressBookMain {
         });
     }
 
-    //  UC9: View persons grouped by City or State
+    // UC9: View persons grouped by City or State
     private viewPersonsByCityOrState(): void {
         this.r1.question("View by city or state? ", (type) => {
             if (type !== 'city' && type !== 'state') {
@@ -250,9 +250,40 @@ class AddressBookMain {
         });
     }
 
-    // main entry point with UC1 to UC9 options
+    // UC10: Count of persons by City or State across all Address Books
+    private countPersonsByCityOrState(): void {
+        this.r1.question("Do you want count by 'city' or 'state'? ", (type) => {
+            if (type !== 'city' && type !== 'state') {
+                console.log(" Invalid input. Please enter 'city' or 'state'.");
+                this.r1.close();
+                return;
+            }
+
+            const map = new Map<string, number>();
+
+            this.addressBooks.forEach((book) => {
+                book.getContacts().forEach((contact) => {
+                    const key = type === 'city' ? contact.city : contact.state;
+                    map.set(key, (map.get(key) || 0) + 1);
+                });
+            });
+
+            if (map.size === 0) {
+                console.log("📭 No contacts to count.");
+            } else {
+                console.log(`\n Contact count grouped by ${type.toUpperCase()}:`);
+                map.forEach((count, key) => {
+                    console.log(`  ${key}: ${count} contact(s)`);
+                });
+            }
+
+            this.r1.close();
+        });
+    }
+
+    // main entry point with UC1 to UC10 options
     start(): void {
-        console.log("📒 Welcome to Address Book System");
+        console.log(" Welcome to Address Book System");
         this.selectAddressBook(() => {
             this.r1.question(
                 "\nChoose an option:\n" +
@@ -262,7 +293,8 @@ class AddressBookMain {
                 "4. Delete contact\n" +
                 "5. Search person by city/state\n" +
                 "6. View persons grouped by city/state\n" +
-                "Enter 1–6: ",
+                "7. View contact count by city/state\n" +  // UC10
+                "Enter 1–7: ",
                 (opt) => {
                     if (opt === "1") this.addContactFlow();
                     else if (opt === "2") this.editContactFlow();
@@ -270,6 +302,7 @@ class AddressBookMain {
                     else if (opt === "4") this.deleteContactFlow();
                     else if (opt === "5") this.searchByCityOrState();
                     else if (opt === "6") this.viewPersonsByCityOrState();
+                    else if (opt === "7") this.countPersonsByCityOrState();
                     else { console.log("Invalid option."); this.r1.close(); }
                 }
             );
