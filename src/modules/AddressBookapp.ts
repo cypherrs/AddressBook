@@ -80,7 +80,7 @@ class AddressBook {
             return;
         }
         this.contacts.forEach((c, i) => {
-            console.log(`\n Contact ${i + 1}`);
+            console.log(`\nContact ${i + 1}`);
             c.displayContact();
         });
     }
@@ -88,7 +88,13 @@ class AddressBook {
     // UC11: Sort contact alphabetically by first name
     sortContactsByName(): void {
         this.contacts.sort((a, b) => a.firstName.localeCompare(b.firstName));
-        console.log(" Contacts sorted alphabetically by first name.");
+        console.log(" Contacts sorted alphabetically by name.");
+    }
+
+    // UC12: Sort contact by city/state/zip
+    sortContactsBy(field: "city" | "state" | "zip"): void {
+        this.contacts.sort((a, b) => a[field].localeCompare(b[field]));
+        console.log(` Contacts sorted by ${field}.`);
     }
 
     // helper to return contact list
@@ -108,7 +114,7 @@ class AddressBookMain {
         this.r1.question("Enter Address Book name: ", (name) => {
             if (!this.addressBooks.has(name)) {
                 this.addressBooks.set(name, new AddressBook());
-                console.log(` Created new Address Book: ${name}`);
+                console.log(`Created new Address Book: ${name}`);
             } else {
                 console.log(` Switched to Address Book: ${name}`);
             }
@@ -173,7 +179,7 @@ class AddressBookMain {
             this.r1.question("Enter field to edit (lastName, address, city, state, zip, phoneNumber, email): ", (field) => {
                 this.r1.question("Enter new value: ", (value) => {
                     const success = this.currentBook!.editContact(name, field, value);
-                    console.log(success ? "✏ Contact updated." : " Update failed.");
+                    console.log(success ? " Contact updated." : " Update failed.");
                     this.r1.close();
                 });
             });
@@ -184,7 +190,7 @@ class AddressBookMain {
     private deleteContactFlow(): void {
         this.r1.question("Enter contact's First Name to delete: ", (name) => {
             const success = this.currentBook!.deleteContact(name);
-            console.log(success ? " Contact deleted." : " Contact not found.");
+            console.log(success ? "🗑️ Contact deleted." : " Contact not found.");
             this.currentBook!.displayAllContact();
             this.r1.close();
         });
@@ -209,7 +215,7 @@ class AddressBookMain {
                     );
                     if (results.length) {
                         found = true;
-                        console.log(`\nAddress Book: ${name}`);
+                        console.log(`\n Address Book: ${name}`);
                         results.forEach(c => c.displayContact());
                     }
                 });
@@ -230,7 +236,6 @@ class AddressBookMain {
             }
 
             const map = new Map<string, Contact[]>();
-
             this.addressBooks.forEach((book) => {
                 book.getContacts().forEach((c) => {
                     const key = type === 'city' ? c.city : c.state;
@@ -242,13 +247,13 @@ class AddressBookMain {
             });
 
             if (map.size === 0) {
-                console.log("📭 No contacts.");
+                console.log(" No contacts.");
             } else {
                 console.log(`\n👥 Grouped view by ${type.toUpperCase()}`);
                 map.forEach((contacts, key) => {
-                    console.log(`\n ${key}`);
+                    console.log(`\n${key}`);
                     contacts.forEach((c, i) => {
-                        console.log(`  ${i + 1}. ${c.firstName} ${c.lastName}`);
+                        console.log(` ${i + 1}. ${c.firstName} ${c.lastName}`);
                     });
                 });
             }
@@ -256,47 +261,55 @@ class AddressBookMain {
         });
     }
 
-    // UC10: Count of persons by City or State across all Address Books
+    // UC10: Count of persons by City or State
     private countPersonsByCityOrState(): void {
-        this.r1.question("Do you want count by 'city' or 'state'? ", (type) => {
+        this.r1.question("Count by city or state? ", (type) => {
             if (type !== 'city' && type !== 'state') {
-                console.log(" Invalid input. Please enter 'city' or 'state'.");
+                console.log(" Invalid input.");
                 this.r1.close();
                 return;
             }
 
             const map = new Map<string, number>();
-
-            this.addressBooks.forEach((book) => {
-                book.getContacts().forEach((contact) => {
+            this.addressBooks.forEach(book => {
+                book.getContacts().forEach(contact => {
                     const key = type === 'city' ? contact.city : contact.state;
                     map.set(key, (map.get(key) || 0) + 1);
                 });
             });
 
-            if (map.size === 0) {
-                console.log("📭 No contacts to count.");
-            } else {
-                console.log(`\n Contact count grouped by ${type.toUpperCase()}:`);
-                map.forEach((count, key) => {
-                    console.log(`  ${key}: ${count} contact(s)`);
-                });
-            }
-
+            console.log(`\n Count by ${type.toUpperCase()}`);
+            map.forEach((count, key) => {
+                console.log(` ${key}: ${count} contact(s)`);
+            });
             this.r1.close();
         });
     }
 
-    // UC11: Sort contacts alphabetically by name
-    private sortContactsAlphabetically(): void {
+    // UC11: Sort contacts by Name
+    private sortContactsByName(): void {
         this.currentBook!.sortContactsByName();
         this.currentBook!.displayAllContact();
         this.r1.close();
     }
 
-    // main entry point with UC1 to UC11 options
+    // UC12: Sort contacts by City/State/Zip
+    private sortContactsByField(): void {
+        this.r1.question("Sort by which field? (city/state/zip): ", (field) => {
+            if (field !== "city" && field !== "state" && field !== "zip") {
+                console.log("❌ Invalid field.");
+                this.r1.close();
+                return;
+            }
+            this.currentBook!.sortContactsBy(field as "city" | "state" | "zip");
+            this.currentBook!.displayAllContact();
+            this.r1.close();
+        });
+    }
+
+    // Entry point – UC1 to UC12
     start(): void {
-        console.log("📒 Welcome to Address Book System");
+        console.log(" Welcome to Address Book System");
         this.selectAddressBook(() => {
             this.r1.question(
                 "\nChoose an option:\n" +
@@ -307,8 +320,9 @@ class AddressBookMain {
                 "5. Search person by city/state\n" +
                 "6. View persons grouped by city/state\n" +
                 "7. View contact count by city/state\n" +
-                "8. Sort contacts alphabetically by name\n" +   // UC11
-                "Enter 1–8: ",
+                "8. Sort contacts by name\n" +
+                "9. Sort contacts by city/state/zip\n" +
+                "Enter 1–9: ",
                 (opt) => {
                     if (opt === "1") this.addContactFlow();
                     else if (opt === "2") this.editContactFlow();
@@ -317,14 +331,15 @@ class AddressBookMain {
                     else if (opt === "5") this.searchByCityOrState();
                     else if (opt === "6") this.viewPersonsByCityOrState();
                     else if (opt === "7") this.countPersonsByCityOrState();
-                    else if (opt === "8") this.sortContactsAlphabetically();
-                    else { console.log("Invalid option."); this.r1.close(); }
+                    else if (opt === "8") this.sortContactsByName();
+                    else if (opt === "9") this.sortContactsByField();
+                    else { console.log(" Invalid option."); this.r1.close(); }
                 }
             );
         });
     }
 }
 
-// launch the application
+// 🔃 Launch the app
 const main = new AddressBookMain();
 main.start();
