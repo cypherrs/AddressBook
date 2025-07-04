@@ -28,6 +28,12 @@ class Contact {
         console.log(`Phone Number : ${this.phoneNumber}`);
         console.log(`Email        : ${this.email}`);
     }
+
+    // UC7: Adding equals method to check for duplicate person
+    equals(other: Contact): boolean {
+        return this.firstName.toLowerCase() === other.firstName.toLowerCase() &&
+            this.lastName.toLowerCase() === other.lastName.toLowerCase();
+    }
 }
 
 import * as readline from 'readline';
@@ -36,14 +42,24 @@ import * as readline from 'readline';
 class AddressBook {
     private contacts: Contact[] = [];
 
-    // UC2: adding new contact to list
-    addContact(contact: Contact) {
+    // UC2 & UC7: adding new contact to list, with duplicate check
+    addContact(contact: Contact): void {
+        // UC7: checking for duplicate using lambda and equals
+        const isDuplicate = this.contacts.some(existing =>
+            existing.equals(contact)
+        );
+
+        if (isDuplicate) {
+            console.log("❌ Duplicate contact. This person already exists in the Address Book.");
+            return;
+        }
+
         this.contacts.push(contact);
-        console.log('The contact added successfully.\n');
+        console.log('✅ The contact added successfully.\n');
     }
 
     // displaying all saved contacts
-    displayAllContact() {
+    displayAllContact(): void {
         console.log('-----  All Contacts  -----');
         if (this.contacts.length === 0) {
             console.log("No contacts found.");
@@ -74,7 +90,7 @@ class AddressBook {
         return false;
     }
 
-
+    // getter to allow access to contacts array
     getContacts(): Contact[] {
         return this.contacts;
     }
@@ -83,7 +99,7 @@ class AddressBook {
 // UC6: Managing multiple AddressBooks by name using a Map
 class AddressBookMain {
     private addressBooks: Map<string, AddressBook> = new Map(); // UC6 dictionary of books
-    private currentBook: AddressBook | null = null;              // to selected AddressBook
+    private currentBook: AddressBook | null = null;              // selected AddressBook
     private r1 = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -143,7 +159,7 @@ class AddressBookMain {
                                                 contactData.email
                                             );
 
-                                            this.currentBook!.addContact(newContact); // UC6: Using selected book
+                                            this.currentBook!.addContact(newContact); // UC6 & UC7
 
                                             // UC5: asking if user wants to add another contact
                                             this.r1.question("Do you want to add another contact? (y/n): ", (answer) => {
@@ -165,7 +181,7 @@ class AddressBookMain {
             });
         };
 
-        askDetails();
+        askDetails(); // start collecting contact info
     }
 
     // UC3: editing the contact by first name using console
@@ -210,7 +226,7 @@ class AddressBookMain {
             } else {
                 console.log("Contact not found.");
             }
-            this.r1.close();
+            this.r1.close(); // close readline after operation
         });
     }
 
@@ -240,7 +256,6 @@ class AddressBookMain {
     }
 }
 
-// UC6: Launching the app with ability to handle multiple address books
+// UC6 & UC7: Launching the app with ability to handle multiple address books and prevent duplicates
 const addressBook1 = new AddressBookMain();
 addressBook1.start();
-Multi
